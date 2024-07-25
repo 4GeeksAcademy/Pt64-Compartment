@@ -8,6 +8,10 @@ export const PropertyListing = ({ property, categories, onSaveToCategory, onAddC
 
   const handleSave = () => {
     if (selectedCategory) {
+
+
+
+      
       onSaveToCategory(property, selectedCategory);
     }
     setShowModal(false);

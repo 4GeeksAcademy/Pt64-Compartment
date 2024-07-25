@@ -10,9 +10,9 @@ import injectContext from "./store/appContext";
 import { Navbar } from "./component/navbar";
 import { Footer } from "./component/footer";
 
-import SearchPage from "./component/searchPage";
 
 import { Category } from "./pages/categories";
+import { SearchPage } from "./pages/searchPage";
 import { CategoryFavorites } from "./pages/categoryFavorites";
 import SignIn from "./component/signIn";
 import SignUp from "./component/signUp";
@@ -39,13 +39,14 @@ const Layout = () => {
                         <Route element={<CategoryFavorites />} path="/categories/:category" />
                         <Route element={<Home />} path="/" />
                         <Route element={<HomeMapComponent />} path="/homeMap" />
-                        <Route element={<Demo />} path="/demo" />
+                      
 
                         <Route element={<SignUp />} path="/signUp" />
                         <Route element={<SignIn />} path="/signIn" />
                         <Route element={<App />} path="/cityfinder" />
                         {/* <Route element={<HomeSearch />} path="/homesearch" /> */}
                         <Route element={<SearchPage />} path="/searchPage" />
+
                         <Route element={<HomeSearchPage />} path="/homeSearchpage" />
                         <Route element={<Single />} path="/single/:theid" />
                         <Route element={<h1>Not found!</h1>} />

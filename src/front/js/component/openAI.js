@@ -11,7 +11,8 @@ function App() {
 
     // console.log("Sending request with prompt:", userPrompt);
 
-    let response = await fetch(process.env.BACKEND_URL + "/api/chatgpt/ask", {
+
+    let response = await fetch(process.env.BACKEND_URL + "api/chatgpt/ask", {
       method: "POST",
       body: JSON.stringify({
         user_prompt: userPrompt
@@ -21,6 +22,7 @@ function App() {
       }
     });
     let data = await response.json();
+
 
     console.log("Received response:", data);
 

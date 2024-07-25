@@ -164,7 +164,7 @@ def analyze_apartments():
         print("Received preferences:", user_preferences)
 
         current_app.logger.info("analyze_apartments endpoint was called")
-        y
+        
         # Fetch apartment data
         base_url = "https://zillow-com1.p.rapidapi.com/propertyExtendedSearch"
         
