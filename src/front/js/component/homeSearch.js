@@ -20,9 +20,7 @@ function HomeSearch({ onSearchResults }) {
         throw new Error('Could not parse input. Please describe your preferences clearly.');
       }
 
-      const url = "https://bug-free-train-r4pxjxgx5vp254xp-3001.app.github.dev/api/analyze_apartments";
-
-      const response = await fetch(url, {
+      const response = await fetch(process.env.BACKEND_URL + "/api/analyze_apartments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ preferences })
