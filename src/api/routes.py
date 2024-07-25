@@ -129,7 +129,7 @@ def process_zillow_data(data):
             'bathrooms': listing.get('bathrooms'),
             'living_area': listing.get('livingArea'),
             'home_type': listing.get('homeType'),
-            'image_url': listing.get('imgSrc'),
+            'image_url': listing.get('imgSrc'),  # Ensure this line is present
             'has_fireplace': listing.get('hasFireplace', False),
             'has_pool': listing.get('hasPool', False),
             'nearby_schools': listing.get('nearbySchools', []),
@@ -144,7 +144,7 @@ def process_zillow_data(data):
             'transitScore': listing.get('transitScore'),
             'bikeScore': listing.get('bikeScore'),
             'crime_rate': listing.get('crimeRate'),
-            'latitude': listing.get('latitude'),  # Add this line
+            'latitude': listing.get('latitude'),
             'longitude': listing.get('longitude'),
             'nearby_amenities': listing.get('nearbyAmenities', []),
         }
@@ -321,6 +321,21 @@ def create_user():
     db.session.commit()
     return jsonify({'message': 'Signup successful'}), 200
 
+# creating new entry to database from chatgpt
+@api.route('/add_listing', methods=['POST'])
+def add_listing():
+    data = request.json
+    if not data or 'cid' not in data or 'listingName' not in data:
+        return jsonify({'error': 'Invalid data provided'}), 400
+    
+    try:
+        new_listing = Listings(cid=data['cid'], listingName=data['listingName'])
+        db.session.add(new_listing)
+        db.session.commit()
+        return jsonify({'message': 'Listing added successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @api.route('/chatgpt/ask', methods = ["POST"])
 def generate_city_list():
@@ -388,18 +403,7 @@ def create_category():
         return jsonify({'message': 'Category created successfully'}), 200
     else:
         return jsonify({'error': 'Category name is required'}), 400
-    
-# creating new entry to database from chatgpt
-@api.route('/add_listing', methods=['POST'])
-def add_listing():
-    data = request.json  # Assuming data is sent as JSON
-    
-    # Example of adding a listing
-    new_listing = Listings(cid=data['cid'], listingName=data['listingName'])
-    db.session.add(new_listing)
-    db.session.commit()
-    
-    return jsonify({'message': 'Listing added successfully'}), 201
+
 
 @api.route("/get_listing_by_cat", methods=["GET"])
 def get_listings_by_cat():
