@@ -2,19 +2,40 @@ const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
 			message: null,
-			categories: [
-				{
-					id: "1",
-					name: "chicken nugget",
-					items: [
-						'Item A', 'Item B', 'Item C'
-					]
-				},
-			],
+			categories: [],
 			isLoggedIn: !!sessionStorage.getItem('token'), // Initialize based on token presence
 			token: sessionStorage.getItem('token') || null,
 		},
 		actions: {
+
+			fetchCategories: async () => {
+				const response = await fetch(process.env.BACKEND_URL + "api/categories");
+				if (response.ok) {
+					const data = await response.json();
+					console.log('Categories successfully gotten');
+					setStore({categories: data});
+				} else {
+					console.error('Failed to fetch categories:', response.status);
+				}
+			},
+
+			handleCreateCategory: async (newCategoryName) => {
+				if (!newCategoryName) return;
+				const response = await fetch(process.env.BACKEND_URL + "api/create_category", {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ name: newCategoryName })
+				});
+
+				if (response.ok) {
+					getActions().fetchCategories();
+				} else {
+					console.error('Failed to create category:', response.status);
+				}
+			},
+
 			fetchApartments: async (location) => {
 				const response = await fetch(process.env.BACKEND_URL +`/api/apartments?location=${location}`);
 				const data = await response.json();

@@ -37,7 +37,7 @@ const Layout = () => {
                     <Routes>
                         <Route element={<Category />} path="/categories" />
                         <Route element={<CategoryFavorites />} path="/categories/:category" />
-                        <Route element={<Home />} path="/" />
+                        <Route element={<SearchPage />} path="/" />
                         <Route element={<HomeMapComponent />} path="/homeMap" />
                       
 

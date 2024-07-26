@@ -1,3 +1,8 @@
 .searchPageTitle{
     font-family: 'Zilla Slab';
 }
+.searchPage-div{
+    background-color:#D3CBE4;
+    height: 100vh;
+    width: 120%;
+}
