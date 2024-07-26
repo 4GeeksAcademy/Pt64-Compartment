@@ -127,7 +127,6 @@ const HomePropertyListing = ({ property, categories, onSaveToCategory, onAddCate
       <h3>{address || 'Address not available'}</h3>
       <p>Price: ${typeof price === 'number' ? price.toLocaleString() : (price || 'N/A')}</p>
       <p>{getBedsDescription(bedrooms)}, {bathrooms} baths</p>
-      <p>Living Area: {living_area ? `${living_area} sqft` : 'N/A'}</p>
       {photoUrls.length > 0 ? (
         <Carousel>
           {photoUrls.map((url, index) => (
@@ -146,9 +145,7 @@ const HomePropertyListing = ({ property, categories, onSaveToCategory, onAddCate
         </Carousel>
       ) : (
         <div>
-          <p>No photos available</p>
-          <p>Debug: image_url = {JSON.stringify(property.image_url)}</p>
-          <p>Debug: Full property data = {JSON.stringify(property, null, 2)}</p>
+         
         </div>
       )}
       <Button onClick={() => setShowModal(true)}>Add to Category</Button>

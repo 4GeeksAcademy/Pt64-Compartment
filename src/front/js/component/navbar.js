@@ -1,6 +1,8 @@
 import React, { useContext } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Context } from "../store/appContext";
+import logo from "../../img/logo.png";
+
 
 export const Navbar = () => {
     const { store, actions } = useContext(Context);
@@ -9,9 +11,14 @@ export const Navbar = () => {
 
     return (
         <nav className={`navbar navbar-expand-lg ${navbarClass}`}>
-            <div className="container">
+            <div className="container" id="alpha">
                 <Link to="/" className="navbar-brand navbar-brand-link">
-                    {/* <img src="/path/to/your/logo.png" alt="Compartments.com" className="navbar-brand-image" /> */}
+                    <img 
+                        src={logo} 
+                        alt="Compartments.com" 
+                        className="navbar-brand-image" 
+                        style={{ height: '50px' }} // Adjust the height as needed
+                    />
                 </Link>
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span className="navbar-toggler-icon"></span>
@@ -46,4 +53,4 @@ export const Navbar = () => {
             </div>
         </nav>
     );
-}
+};
