@@ -290,36 +290,27 @@
 }
 
 
-
-.custom-navbar {
+.navbar {
   background-color: #1167BD !important;
+  padding-top: 20px;    
+  padding-bottom: 20px; 
 }
 
-.custom-navbar .navbar-brand,
-.custom-navbar .btn {
+
+
+
+.navbar .navbar-brand,
+.navbar .btn {
   color: white !important;
 }
 
-.custom-navbar .btn {
+.navbar .btn {
   border-color: white;
 }
 
-.custom-navbar .btn:hover {
+.navbar .btn:hover {
   background-color: white;
   color: #1167BD !important;
-}
-
-.custom-navbar {
-  background-color: #1167BD !important;
-}
-
-.custom-navbar .navbar-brand,
-.custom-navbar .btn {
-  color: white !important;
-}
-
-.custom-navbar .btn {
-  border-color: white;
 }
 
 .navbar-brand-link {
@@ -328,28 +319,61 @@
 }
 
 .navbar-brand-image {
-  height: 140px; /* Adjust this value to fit your navbar height */
-  width: auto; /* This maintains the aspect ratio */
+  min-height: 150px;
+  min-width: 150px;
+  width: auto;
+  height: auto;
 }
 
-.custom-navbar .btn:hover {
-  background-color: white;
-  color: #1167BD !important;
+.navbar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
-.navbar-brand-link {
+.navbar-left, .navbar-center, .navbar-right {
   display: flex;
   align-items: center;
 }
 
-.custom-brand {
-  background-image: url('/workspaces/Pt64-Compartment/public/homeai.jpg'); /* Path to your image */
-  background-size: cover;
-  background-position: center;
-  padding: 10px 20px; /* Adjust padding as needed */
-  border-radius: 8px; /* Optional: Add some rounding to the corners */
-  color: white; /* Ensure text color is readable */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Optional: Add text shadow for better readability */
+.navbar-center {
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.toggle-container {
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 5px;
+}
+
+.toggle-option {
+  background: none;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 15px;
+  transition: background-color 0.3s;
+}
+
+.toggle-option.active {
+  background-color: white;
+  color: #1167BD;
+}
+
+.navbar-right .nav-link {
+  color: white;
+  text-decoration: none;
+  margin-left: 20px;
+}
+
+.navbar-right button.nav-link {
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 /* @property --rotate {
