@@ -59,4 +59,4 @@ class Listings(db.Model):
             "id": self.id,
             "uid": self.uid,
             "listingName": self.listingName,
-        }
+ }

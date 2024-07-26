@@ -2,6 +2,8 @@ import React, { useEffect, useState, useContext, useCallback, useRef } from 'rea
 import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { Context } from '../store/appContext';
 import { PropertyListing } from './propertyListing';
+import PropertyCarousel from './propertyCarousal';
+import '../../styles/map.css';
 import MapSearchBar from './mapSearchbar';
 
 const containerStyle = {
@@ -178,57 +180,70 @@ export const AptMapComponent = () => {
     }
   }, [apartments]);
 
+  
   return (
-    <>
+    <div className="map-container">
       <MapSearchBar onSearch={handleSearch} />
-      <LoadScript googleMapsApiKey="AIzaSyA78pBoItwl17q9g5pZPNUYmLuOnTDPVo8">
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={center}
-          zoom={13}
-          onLoad={mapInstance => {
-            mapRef.current = mapInstance;
-            apartments.forEach(apartment => {
-              if (apartment.location.address.coordinate) {
-                addOrUpdateMarker(apartment.id, {
-                  lat: apartment.location.address.coordinate.lat,
-                  lng: apartment.location.address.coordinate.lon
+      <div className="map-and-carousel">
+        <div className="map">
+          <LoadScript googleMapsApiKey="AIzaSyA78pBoItwl17q9g5pZPNUYmLuOnTDPVo8">
+            <GoogleMap
+              mapContainerStyle={containerStyle}
+              center={center}
+              zoom={13}
+              onLoad={mapInstance => {
+                mapRef.current = mapInstance;
+                apartments.forEach(apartment => {
+                  if (apartment.location.address.coordinate) {
+                    addOrUpdateMarker(apartment.id, {
+                      lat: apartment.location.address.coordinate.lat,
+                      lng: apartment.location.address.coordinate.lon
+                    });
+                  }
                 });
-              }
-            });
-          }}
-        >
-          {apartments.map(apartment => (
-            apartment.location.address.coordinate && (
-              <MarkerF
-                key={apartment.id}
-                position={{
-                  lat: apartment.location.address.coordinate.lat,
-                  lng: apartment.location.address.coordinate.lon
-                }}
-                onClick={() => setSelectedApartment(apartment)}
-              />
-            )
-          ))}
-          {selectedApartment && (
-            <InfoWindowF
-              position={{
-                lat: selectedApartment.location.address.coordinate.lat,
-                lng: selectedApartment.location.address.coordinate.lon
               }}
-              onCloseClick={() => setSelectedApartment(null)}
             >
-              <PropertyListing
-                property={selectedApartment}
-                categories={propertyCategories}
-                onSaveToCategory={handleSaveToCategory}
-                onAddCategory={handleAddCategory}
-              />
-            </InfoWindowF>
-          )}
-        </GoogleMap>
-      </LoadScript>
-    </>
+              {apartments.map(apartment => (
+                apartment.location.address.coordinate && (
+                  <MarkerF
+                    key={apartment.id}
+                    position={{
+                      lat: apartment.location.address.coordinate.lat,
+                      lng: apartment.location.address.coordinate.lon
+                    }}
+                    onClick={() => setSelectedApartment(apartment)}
+                  />
+                )
+              ))}
+              {selectedApartment && (
+                <InfoWindowF
+                  position={{
+                    lat: selectedApartment.location.address.coordinate.lat,
+                    lng: selectedApartment.location.address.coordinate.lon
+                  }}
+                  onCloseClick={() => setSelectedApartment(null)}
+                >
+                  <PropertyListing
+                    property={selectedApartment}
+                    categories={propertyCategories}
+                    onSaveToCategory={handleSaveToCategory}
+                    onAddCategory={handleAddCategory}
+                  />
+                </InfoWindowF>
+              )}
+            </GoogleMap>
+          </LoadScript>
+        </div>
+        <div className="carousel">
+          <PropertyCarousel
+            apartments={apartments}
+            categories={propertyCategories}
+            onSaveToCategory={handleSaveToCategory}
+            onAddCategory={handleAddCategory}
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 

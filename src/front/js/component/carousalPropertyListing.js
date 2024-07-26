@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form, InputGroup, FormControl, Carousel } from 'react-bootstrap';
-import '../../styles/propertyListing.css';
+import '../../styles/carousal-property-listing.css';
 
-export const PropertyListing = ({ property, categories, onSaveToCategory, onAddCategory }) => {
+export const CarouselPropertyListing = ({ property, categories, onSaveToCategory, onAddCategory }) => {
   const [showModal, setShowModal] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -55,28 +55,27 @@ export const PropertyListing = ({ property, categories, onSaveToCategory, onAddC
   }; // Close the handleAddCategory function here
 
   return (
-    <div className="property-listing">
-      <div className="property-info">
-      {property.photos && property.photos.length > 0 && (
-      <div className="property-photos">
-        <Carousel>
-        {property.photos.map((photo, index) => (
-          <Carousel.Item key={index}>
+    <div className="carousal-property-listing">
+      <div className="carousal-property-info">
+      
+      <div className="carousal-property-photo">
+       
             <img
               className="d-block w-100"
-              src={photo.href}
-              alt={`Property photo ${index + 1}`}
+              src={property.photos && property.photos.length > 0 
+                ? property.photos[0].href 
+                : 'https://via.placeholder.com/150?text=No+Image'}
+              alt={`Property photo`}
             />
-          </Carousel.Item>
-        ))}
-      </Carousel>
+         
+       
       </div>
-    )}
-      <div className='property-price'>
+    
+      <div className='carousal-property-price'>
         <p>Price: ${property.list_price || property.list_price_max}</p>
       </div>
 
-      <div className='property-meta'>
+      <div className='carousal-property-meta'>
             
     <h3>{property.location.address.line}, {property.location.address.city}, {property.location.address.state_code} {property.location.address.postal_code}</h3>
     

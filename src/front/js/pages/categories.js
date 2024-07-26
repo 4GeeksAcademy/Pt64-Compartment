@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import CatImageUrl from "../../img/CHitchEN winGs.png";
 import { Link } from 'react-router-dom';
 
 export const Category = () => {
@@ -37,6 +36,22 @@ export const Category = () => {
         }
     };
 
+    const handleDeleteCategory = async () => {
+        const response = await fetch(process.env.BACKEND_URL + "api/delete_category", {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: newCategoryName })
+        });
+        if (response.ok) {
+            setNewCategoryName('');
+            fetchCategories();
+        } else {
+            console.error('Failed to create category:', response.status);
+        }
+    };
+
     useEffect(() => {
         fetchCategories();
     }, []);
@@ -50,8 +65,12 @@ export const Category = () => {
                             <Link to={`/categories/${category.id}`} key={category.id}>
                                 <div className="card mb-3">
                                     <div className="card-body">
-                                        <h2>{category.categoryName}</h2>
-                                        <img src={CatImageUrl} alt="Category" />
+                                        <h1 className='d-flex justify-content-between'>
+                                            {category.categoryName}
+                                            <button type="button" className="close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </h1>
                                     </div>
                                 </div>
                             </Link>
@@ -82,7 +101,7 @@ export const Category = () => {
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" className="btn btn-danger" data-bs-dismiss="modal">Close</button>
-                                    <button type="button" className="btn btn-success" onClick={handleCreateCategory}>Create Category</button>
+                                    <button type="button" className="btn btn-success" data-bs-dismiss="modal" onClick={handleCreateCategory}>Create Category</button>
                                 </div>
                             </div>
                         </div>

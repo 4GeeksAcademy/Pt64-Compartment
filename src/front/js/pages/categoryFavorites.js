@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import CatImageUrl from "../../img/CHitchEN winGs.png";
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
 export const CategoryFavorites = () => {
-  const [categories, setCategories] = useState([]);
-  const { category } = useParams();
+  
+  const [listings, setListings] = useState([]);
 
-  const fetchCategories = async () => {
-    const response = await fetch(process.env.BACKEND_URL + "api/categories");
+  const { listing } = useParams();
+
+  const fetchListings = async () => {
+    const response = await fetch(process.env.BACKEND_URL + "api/get_listing_by_cat");
     if (response.ok) {
       const data = await response.json();
-      const thisCategory = data.find((cat) => cat.id == category);
-      if (thisCategory) {
-        setCategories([thisCategory]);
+      const thisListing = data.find((list) => list.id == listing);
+      if (thisListing) {
+        setListings([thisListing]);
       }
     } else {
-      console.error('Failed to fetch categories:', response.status);
+      console.error('Failed to fetch listings:', response.status);
     }
   };
 
   useEffect(() => {
-    fetchCategories();
+    fetchListings();
   }, []);
 
   return (
@@ -29,19 +30,18 @@ export const CategoryFavorites = () => {
       <div className="App">
         <div className="container mt-5">
           <div className="card-deck">
-            {categories.map(category => (
-              <div className="card mb-3" key={category.id}>
+            {listings.map(listing => (
+              <div className="card mb-3" key={listing.id}>
                 <div className="card-body">
                   <h5 className="card-title">
-                    <Link to={`/categories/${category.id}`}>
-                      <img src={CatImageUrl} alt="Category" />
+                    <Link to={`/get_listing_by_cat/${listing.id}`}>
                     </Link>
                   </h5>
                 </div>
                 <div className="card-footer">
                   <ul className="list-unstyled">
-                    {category.items.map((item, index) => (
-                      <li key={index}>{item}</li>
+                    {listing.map((listingName, index) => (
+                      <li key={index}>{listingName}</li>
                     ))}
                   </ul>
                 </div>

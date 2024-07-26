@@ -1,3 +1,46 @@
-.map-background{
-    background-color: #D9B3EA;
-}
+.map-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+  }
+  
+  .map-and-carousel {
+    display: flex;
+    flex: 1;
+  }
+  
+  .map {
+    flex: 2;
+    width: 100%;
+  }
+  
+  .carousel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  
+  /* Adjust the carousel item height */
+  .carousel-item {
+    height: calc(100vh - 40px); /* Adjust based on your layout */
+    overflow-y: auto;
+  }
+
+  .property-carousel {
+    height: 200vh; /* Adjust this value as needed */
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+  }
+  
+  .property-carousel-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 300px; /* Adjust the width as needed */
+    transition: transform 0.2s;
+  }
+
+
