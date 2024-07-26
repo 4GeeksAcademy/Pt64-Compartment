@@ -5,48 +5,40 @@ import { Context } from "../store/appContext";
 export const Navbar = () => {
     const { store, actions } = useContext(Context);
 
+    const navbarClass = store.isLoggedIn ? 'navbar-logged-in' : 'navbar-logged-out';
+
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <nav className={`navbar navbar-expand-lg ${navbarClass}`}>
             <div className="container">
-                <Link to="/" className="navbar-brand">
-                    Compartments.com
+                <Link to="/" className="navbar-brand navbar-brand-link">
+                    {/* <img src="/path/to/your/logo.png" alt="Compartments.com" className="navbar-brand-image" /> */}
                 </Link>
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span className="navbar-toggler-icon"></span>
                 </button>
                 <div className="collapse navbar-collapse" id="navbarNav">
-                    <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul className="navbar-nav ms-auto">
                         <li className="nav-item">
-                            <NavLink to="/homeSearchPage" className="nav-link" activeClassName="active">Buy</NavLink>
+                            <Link to="/homeSearchPage" className="btn btn-outline-light me-2">Buy</Link>
                         </li>
                         <li className="nav-item">
-                            <NavLink to="/searchPage" className="nav-link" activeClassName="active">Rent</NavLink>
+                            <Link to="/searchPage" className="btn btn-outline-light me-2">Rent</Link>
                         </li>
-                    </ul>
-                    <ul className="navbar-nav">
                         <li className="nav-item">
-                            <Link to="/categories" className="nav-link">
-                                <button className="btn btn-outline-primary">Categories</button>
-                            </Link>
+                            <Link to="/categories" className="btn btn-outline-light me-2">Categories</Link>
                         </li>
                         {!store.token ? (
                             <>
                                 <li className="nav-item">
-                                    <Link to="/signin" className="nav-link">
-                                        <button className="btn btn-primary">Sign In</button>
-                                    </Link>
+                                    <Link to="/signin" className="btn btn-outline-light me-2">Sign In</Link>
                                 </li>
                                 <li className="nav-item">
-                                    <Link to="/signup" className="nav-link">
-                                        <button className="btn btn-primary">Sign Up</button>
-                                    </Link>
+                                    <Link to="/signup" className="btn btn-outline-light">Sign Up</Link>
                                 </li>
                             </>
                         ) : (
                             <li className="nav-item">
-                                <Link to="/signin" className="nav-link">
-                                    <button className="btn btn-primary" onClick={() => actions.logOut()}>Logout</button>
-                                </Link>
+                                <button className="btn btn-outline-light" onClick={() => actions.logOut()}>Logout</button>
                             </li>
                         )}
                     </ul>

@@ -24,6 +24,9 @@ const HomeMapComponent = ({ searchResults }) => {
   useEffect(() => {
     if (searchResults && searchResults.length > 0) {
       console.log("Search results received:", JSON.stringify(searchResults, null, 2));
+      searchResults.forEach((apt, index) => {
+        console.log(`Apartment ${index} image_url:`, apt.image_url);
+      });
       setApartments(searchResults);
       setCenter({
         lat: Number(searchResults[0].latitude),
@@ -39,6 +42,12 @@ const HomeMapComponent = ({ searchResults }) => {
 
   const handleAddCategory = (newCategory) => {
     setPropertyCategories([...propertyCategories, newCategory]);
+  };
+
+  const handleMarkerClick = (apartment) => {
+    console.log("Selected apartment data:", JSON.stringify(apartment, null, 2));
+    console.log("Selected apartment image_url:", apartment.image_url);
+    setSelectedApartment(apartment);
   };
 
   console.log("Rendering HomeMapComponent with apartments:", JSON.stringify(apartments, null, 2));
@@ -62,10 +71,7 @@ const HomeMapComponent = ({ searchResults }) => {
               <Marker
                 key={idx}
                 position={position}
-                onClick={() => {
-                  console.log("Selected apartment data:", JSON.stringify(apartment, null, 2));
-                  setSelectedApartment(apartment);
-                }}
+                onClick={() => handleMarkerClick(apartment)}
               />
             );
           })}
@@ -85,6 +91,17 @@ const HomeMapComponent = ({ searchResults }) => {
                   onSaveToCategory={handleSaveToCategory}
                   onAddCategory={handleAddCategory}
                 />
+                {selectedApartment.image_url && (
+                  <img
+                    src={selectedApartment.image_url}
+                    alt="Property"
+                    style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+                    onError={(e) => {
+                      console.error(`Error loading image: ${selectedApartment.image_url}`);
+                      e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+                    }}
+                  />
+                )}
               </div>
             </InfoWindow>
           )}

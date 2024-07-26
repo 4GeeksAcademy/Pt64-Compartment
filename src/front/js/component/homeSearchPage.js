@@ -10,21 +10,25 @@ export const HomeSearchPage = () => {
   const [error, setError] = useState(null);
 
   const handleSearchResults = (results) => {
+    console.log("Raw search results:", JSON.stringify(results, null, 2));
     setIsLoading(false);
     setError(null);
     setSearchResults(results);
     if (results && results.apartments) {
-      const newMapData = results.apartments.map(apt => ({
-        latitude: apt.latitude,
-        longitude: apt.longitude,
-        address: apt.address,
-        price: apt.price,
-        bedrooms: apt.bedrooms,
-        bathrooms: apt.bathrooms,
-        living_area: apt.living_area,
-        image_url: apt.image_url
-      }));
-      console.log("Map Data:", newMapData);
+      const newMapData = results.apartments.map(apt => {
+        console.log(`Apartment ${apt.address} image_url:`, apt.image_url);
+        return {
+          latitude: apt.latitude,
+          longitude: apt.longitude,
+          address: apt.address,
+          price: apt.price,
+          bedrooms: apt.bedrooms,
+          bathrooms: apt.bathrooms,
+          living_area: apt.living_area,
+          image_url: apt.image_url
+        };
+      });
+      console.log("First map data item:", JSON.stringify(newMapData[0], null, 2));
       setMapData(newMapData);
     }
   };
@@ -64,7 +68,7 @@ export const HomeSearchPage = () => {
           {error && <p className="error-message">{error}</p>}
           {!isLoading && !error && searchResults && (
             <>
-              <h2>Search Results</h2>
+  
               {searchResults.apartments && searchResults.apartments.length > 0 ? (
                 <ApartmentList apartments={searchResults.apartments} />
               ) : (

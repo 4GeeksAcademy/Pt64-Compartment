@@ -11,6 +11,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 					]
 				},
 			],
+			isLoggedIn: !!sessionStorage.getItem('token'), // Initialize based on token presence
+			token: sessionStorage.getItem('token') || null,
 		},
 		actions: {
 			fetchApartments: async (location) => {
@@ -21,7 +23,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			
 			logOut: () => {
 				sessionStorage.removeItem('token');
-				setStore({ token: null });
+				setStore({ token: null, isLoggedIn: false });
 			},
 
 			getMessage: async () => {
@@ -70,7 +72,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					}
 					const data = await req.json();
 					sessionStorage.setItem("token", data.access_token);
-					setStore({ token: data.access_token });
+					setStore({ token: data.access_token, isLoggedIn: true });
 					console.log('data logging in user', data);
 					return true;
 				} catch (error) {
@@ -83,15 +85,23 @@ const getState = ({ getStore, getActions, setStore }) => {
 				try {
 					let options = {
 						headers: {
-							'Authorization': 'Bearer' + sessionStorage.getItem('token')
+							'Authorization': 'Bearer ' + sessionStorage.getItem('token')
 						}
 					}
 					let response = await fetch(process.env.BACKEND_URL + "/api/private", options)
 					let data = await response.json()
+					return data;
 				}
 				catch (error) {
 					console.log(error)
+					return null;
 				}
+			},
+
+			// New action to check and update login status
+			checkLoginStatus: () => {
+				const token = sessionStorage.getItem('token');
+				setStore({ isLoggedIn: !!token, token: token || null });
 			}
 		}
 	};

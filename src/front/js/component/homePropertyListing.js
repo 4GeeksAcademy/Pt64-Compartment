@@ -41,11 +41,38 @@ const HomePropertyListing = ({ property, categories, onSaveToCategory, onAddCate
     return <div>No property data available</div>;
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setError(null);
     if (selectedCategory) {
-      onSaveToCategory(property, selectedCategory);
+      try {
+        const token = sessionStorage.getItem('token');
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/add_listing`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            cid: selectedCategory,
+            listingName: property.address
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Listing added successfully');
+        onSaveToCategory(property, selectedCategory);
+        setShowModal(false);
+      } catch (error) {
+        console.error('Error adding listing:', error);
+        setError(error.message);
+      }
+    } else {
+      setError('Please select a category');
     }
-    setShowModal(false);
   };
 
   const getBedsDescription = (beds) => {
@@ -57,7 +84,7 @@ const HomePropertyListing = ({ property, categories, onSaveToCategory, onAddCate
     const token = sessionStorage.getItem('token');
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}api/create_category`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/create_category`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +101,7 @@ const HomePropertyListing = ({ property, categories, onSaveToCategory, onAddCate
       if (data) {
         console.log('Category created successfully');
         onAddCategory(data.name || newCategory);
-        setSelectedCategory(data.name || newCategory);
+        setSelectedCategory(data.id || data.name);
         setNewCategory('');
       } else {
         console.error('Failed to create category');
