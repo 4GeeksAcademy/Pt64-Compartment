@@ -418,17 +418,17 @@ def delete_category():
     return
 
     
-# creating new entry to database from chatgpt
-@api.route('/add_listing', methods=['POST'])
-def add_listing():
-    data = request.json  # Assuming data is sent as JSON
+# # creating new entry to database from chatgpt
+# @api.route('/add_listing', methods=['POST'])
+# def add_listing():
+#     data = request.json  # Assuming data is sent as JSON
     
-    # Example of adding a listing
-    new_listing = Listings(cid=data['cid'], listingName=data['listingName'])
-    db.session.add(new_listing)
-    db.session.commit()
+#     # Example of adding a listing
+#     new_listing = Listings(cid=data['cid'], listingName=data['listingName'])
+#     db.session.add(new_listing)
+#     db.session.commit()
     
-    return jsonify({'message': 'Listing added successfully'}), 201
+#     return jsonify({'message': 'Listing added successfully'}), 201
 
 @api.route("/get_listing_by_cat", methods=["GET"])
 def get_listings_by_cat():
