@@ -120,7 +120,7 @@ def process_zillow_data(data):
     processed_listings = []
     props = data.get('props', [])
     print(f"Number of properties in raw data: {len(props)}")
-    for listing in props:
+    for index, listing in enumerate(props):
         processed_listing = {
             'zpid': listing.get('zpid'),
             'address': listing.get('address'),
@@ -129,7 +129,7 @@ def process_zillow_data(data):
             'bathrooms': listing.get('bathrooms'),
             'living_area': listing.get('livingArea'),
             'home_type': listing.get('homeType'),
-            'image_url': listing.get('imgSrc'),
+            'image_url': listing.get('imgSrc'),  # Ensure this line is present
             'has_fireplace': listing.get('hasFireplace', False),
             'has_pool': listing.get('hasPool', False),
             'nearby_schools': listing.get('nearbySchools', []),
@@ -144,12 +144,18 @@ def process_zillow_data(data):
             'transitScore': listing.get('transitScore'),
             'bikeScore': listing.get('bikeScore'),
             'crime_rate': listing.get('crimeRate'),
-            'latitude': listing.get('latitude'),  # Add this line
+            'latitude': listing.get('latitude'),
             'longitude': listing.get('longitude'),
             'nearby_amenities': listing.get('nearbyAmenities', []),
         }
+        print(f"Processed listing {index} image_url: {processed_listing['image_url']}")
         processed_listings.append(processed_listing)
+    
     print(f"Number of processed listings: {len(processed_listings)}")
+    if processed_listings:
+        print(f"Sample processed listing: {json.dumps(processed_listings[0], indent=2)}")
+    else:
+        print("No listings were processed.")
     return processed_listings
 
 
@@ -161,7 +167,7 @@ def analyze_apartments():
             raise ValueError("Request data must be in JSON format")
 
         user_preferences = request.json.get('preferences', {})
-        print("Received preferences:", user_preferences)
+        print("Received preferences:", json.dumps(user_preferences, indent=2))
 
         current_app.logger.info("analyze_apartments endpoint was called")
         
@@ -240,7 +246,7 @@ def analyze_apartments():
         
         # Analyze with OpenAI
         openai_prompt = f"""
-        Analyze these properties based on the following user preferences: {user_preferences}
+        Analyze these properties based on the following user preferences: {json.dumps(user_preferences, indent=2)}
 
         Pay special attention to features that are attractive to homeowners, such as:
         1. Home price (range: {min_price if min_price else 'Not specified'} to {max_price if max_price else 'Not specified'})
@@ -251,7 +257,7 @@ def analyze_apartments():
 
         For each property, highlight the features that best match the user's preferences and those that could be particularly attractive to homeowners.
 
-        Property data: {json.dumps(filtered_data)}
+        Property data: {json.dumps(filtered_data, indent=2)}
 
         Please provide a detailed analysis of the top 3-5 properties that best match the user's preferences, 
         including mentions of the special features listed above where applicable.
@@ -321,6 +327,21 @@ def create_user():
     db.session.commit()
     return jsonify({'message': 'Signup successful'}), 200
 
+# creating new entry to database from chatgpt
+@api.route('/add_listing', methods=['POST'])
+def add_listing():
+    data = request.json
+    if not data or 'cid' not in data or 'listingName' not in data:
+        return jsonify({'error': 'Invalid data provided'}), 400
+    
+    try:
+        new_listing = Listings(cid=data['cid'], listingName=data['listingName'])
+        db.session.add(new_listing)
+        db.session.commit()
+        return jsonify({'message': 'Listing added successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @api.route('/chatgpt/ask', methods = ["POST"])
 def generate_city_list():
@@ -369,42 +390,37 @@ def get_categories():
     all_categories = list(map(lambda x: x.serialize(), Categories.query.all()))
     return jsonify(all_categories)
 
-#route for createCategory
-@api.route('/create_category', methods=['POST'])
-# @jwt_required()
+@api.route('/api/create_category', methods=['POST'])
+@jwt_required()
 def create_category():
     data = request.get_json()
-    uid = 1
-    # get_jwt_identity()
+    uid = get_jwt_identity()  # Get the user ID from the JWT token
 
     category_name = data.get('name')
 
     # Check if category_name is provided and not empty
     if category_name:
-        # Add the category to the list (simulating storage)
-        category = Categories(uid = uid, categoryName = category_name)
+        # Add the category to the database
+        category = Categories(uid=uid, categoryName=category_name)
         db.session.add(category)
         db.session.commit()
-        return jsonify({'message': 'Category created successfully'}), 200
+        return jsonify({'id': category.id, 'name': category.categoryName}), 201
     else:
         return jsonify({'error': 'Category name is required'}), 400
+
+if __name__ == '__main__':
+    db.create_all()
+    app.run(debug=True)
+
     
 @api.route('/delete_category', methods=['DELETE'])
 def delete_category():
     return
 
     
-# creating new entry to database from chatgpt
-@api.route('/addListingToCategory', methods=['POST'])
-def add_listing():
-    data = request.json  # Assuming data is sent as JSON
-    
-    # Example of adding a listing
-    new_listing = Listings(cid=data['cid'], listingName=data['listingName'])
-    db.session.add(new_listing)
-    db.session.commit()
-    
-    return jsonify({'message': 'Listing added successfully'}), 201
+
+
+
 
 
 @api.route("/get_listing_by_cat", methods=["GET"])

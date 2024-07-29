@@ -2,48 +2,50 @@ import React, { useState } from 'react';
 // import OpenAI from "openai";
 
 function App() {
-    const [userPrompt, setUserPrompt] = useState('');
-    const [response, setResponse] = useState('');
+  const [userPrompt, setUserPrompt] = useState('');
+  const [response, setResponse] = useState('');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        // console.log("handleSubmit called");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // console.log("handleSubmit called");
 
-        // console.log("Sending request with prompt:", userPrompt);
+    // console.log("Sending request with prompt:", userPrompt);
 
-        let response = await fetch(process.env.BACKEND_URL +"api/chatgpt/ask", {
-            method: "POST",
-            body: JSON.stringify({
-                user_prompt: userPrompt
-            }),
-            headers: {
-                "Content-type": "application/json",
-            }
-        });
-        let data = await response.json();
 
-        console.log("Received response:", data);
+    let response = await fetch(process.env.BACKEND_URL + "api/chatgpt/ask", {
+      method: "POST",
+      body: JSON.stringify({
+        user_prompt: userPrompt
+      }),
+      headers: {
+        "Content-type": "application/json",
+      }
+    });
+    let data = await response.json();
 
-        if (response.ok) {
-            const content = data.result
-            setResponse(content);
-        } else {
-            console.error("Error during API call:", data.error);
-            setResponse("An error occurred while processing your request.");
-        }
 
-        // if(data.error) {
-        //     console.error("Error during API call:", data.error);
-        // }
-        // else {
-        //     setResponse(data.result);
-        // }
+    console.log("Received response:", data);
 
-        // setResponse({ error: "An error occurred while processing your request." });
-    };
+    if (response.ok) {
+      const content = data.result
+      setResponse(content);
+    } else {
+      console.error("Error during API call:", data.error);
+      setResponse("An error occurred while processing your request.");
+    }
 
-    return (
-      <div className="container mt-5">
+    // if(data.error) {
+    //     console.error("Error during API call:", data.error);
+    // }
+    // else {
+    //     setResponse(data.result);
+    // }
+
+    // setResponse({ error: "An error occurred while processing your request." });
+  };
+
+  return (
+    <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-8">
           <form onSubmit={handleSubmit} className="mb-4">
@@ -79,7 +81,7 @@ function App() {
         </div>
       </div>
     </div>
-    )
+  )
 }
 
 export default App
