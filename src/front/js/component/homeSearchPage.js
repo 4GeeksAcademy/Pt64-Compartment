@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import HomeMapComponent from "./homeMap";
 import HomeSearch from "./homeSearch";
 import ApartmentList from "./apartmentList";
@@ -13,11 +14,23 @@ export const HomeSearchPage = () => {
     console.log("Raw search results:", JSON.stringify(results, null, 2));
     setIsLoading(false);
     setError(null);
-    setSearchResults(results);
+    
     if (results && results.apartments) {
-      const newMapData = results.apartments.map(apt => {
+      // Add unique identifiers to each apartment
+      const processedResults = {
+        ...results,
+        apartments: results.apartments.map(apt => ({
+          ...apt,
+          id: uuidv4() // Add a unique ID to each apartment
+        }))
+      };
+      
+      setSearchResults(processedResults);
+      
+      const newMapData = processedResults.apartments.map(apt => {
         console.log(`Apartment ${apt.address} image_url:`, apt.image_url);
         return {
+          id: apt.id, // Include the unique ID in map data
           latitude: apt.latitude,
           longitude: apt.longitude,
           address: apt.address,
@@ -30,6 +43,8 @@ export const HomeSearchPage = () => {
       });
       console.log("First map data item:", JSON.stringify(newMapData[0], null, 2));
       setMapData(newMapData);
+    } else {
+      setSearchResults(results);
     }
   };
 
@@ -68,7 +83,6 @@ export const HomeSearchPage = () => {
           {error && <p className="error-message">{error}</p>}
           {!isLoading && !error && searchResults && (
             <>
-  
               {searchResults.apartments && searchResults.apartments.length > 0 ? (
                 <ApartmentList apartments={searchResults.apartments} />
               ) : (

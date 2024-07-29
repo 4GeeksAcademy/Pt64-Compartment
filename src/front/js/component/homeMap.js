@@ -13,7 +13,7 @@ const defaultCenter = {
   lng: -122.4194
 };
 
-const HomeMapComponent = ({ searchResults }) => {
+const HomeMapComponent = ({ searchResults, onMarkerClick }) => {
   const { actions } = useContext(Context);
   const [apartments, setApartments] = useState([]);
   const [selectedApartment, setSelectedApartment] = useState(null);
@@ -48,6 +48,7 @@ const HomeMapComponent = ({ searchResults }) => {
     console.log("Selected apartment data:", JSON.stringify(apartment, null, 2));
     console.log("Selected apartment image_url:", apartment.image_url);
     setSelectedApartment(apartment);
+    onMarkerClick(apartment.id); // Pass the selected apartment ID to the parent component
   };
 
   console.log("Rendering HomeMapComponent with apartments:", JSON.stringify(apartments, null, 2));
