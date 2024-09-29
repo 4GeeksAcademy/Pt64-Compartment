@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { Button, Modal, Form, Container, Row, Col } from 'react-bootstrap';
 
 export const CreateCategory = () => {
     const [newCategory, setNewCategory] = useState('');
-    const [categories, setCategories] = useState([]);
+    const [show, setShow] = useState(false);
+
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
 
     const handleCreateCategory = () => {
-        // Make an API call to Flask backend
         fetch(process.env.BACKEND_URL + "api/create_category", {
             method: 'POST',
             headers: {
@@ -15,12 +18,10 @@ export const CreateCategory = () => {
         })
         .then(response => {
             if (response.ok) {
-                // Category created successfully
                 console.log('Category created successfully');
-                // Reset the input field
                 setNewCategory('');
+                handleClose();
             } else {
-                // Handle error response from server
                 console.error('Failed to create category');
             }
         })
@@ -30,49 +31,50 @@ export const CreateCategory = () => {
     };
 
     return (
-        <div>
-            {/* <!-- Button trigger modal --> */}
-            <button type="button" className="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">
-                Create New Category
-            </button>
+        <Container className="mt-5">
+            <Row className="justify-content-center">
+                <Col md={6}>
+                    <Button 
+                        variant="primary" 
+                        onClick={handleShow}
+                        style={{ backgroundColor: '#77d0d3', borderColor: '#77d0d3' }}
+                    >
+                        Create New Category
+                    </Button>
 
-            {/* <!-- Modal --> */}
-            <div className="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                <div className="modal-dialog modal-dialog-centered" role="document">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="exampleModalLongTitle">Modal title</h5>
-                            <button type="button" className="close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                            <div className="modal-body">
-                                <div className="mt-4">
-                                    <h5>Create New Category</h5>
-                                    <div className="input-group mb-3">
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            placeholder="Category Name"
-                                            value={newCategory}
-                                            onChange={(e) => setNewCategory(e.target.value)}
-                                        />
-                                        <div className="input-group-append">
-                                            <button className="btn btn-primary" type="button" onClick={handleCreateCategory}>
-                                                Create
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {/* <div className="modal-footer">
-                            <button type="button" className="btn btn-danger" data-bs-dismiss="modal">Close</button>
-                            <button type="button" className="btn btn-success">Create Category</button>
-                        </div> */}
-                    </div>
-                </div>
-            </div>
-        </div>
+                    <Modal show={show} onHide={handleClose} centered>
+                        <Modal.Header closeButton style={{ backgroundColor: '#77d0d3', color: 'white' }}>
+                            <Modal.Title>Create New Category</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <Form>
+                                <Form.Group className="mb-3" controlId="formCategoryName">
+                                    <Form.Label>Category Name</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Enter category name"
+                                        value={newCategory}
+                                        onChange={(e) => setNewCategory(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Form>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={handleClose}>
+                                Close
+                            </Button>
+                            <Button 
+                                variant="primary" 
+                                onClick={handleCreateCategory}
+                                style={{ backgroundColor: '#77d0d3', borderColor: '#77d0d3' }}
+                            >
+                                Create Category
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                </Col>
+            </Row>
+        </Container>
     );
 }
 

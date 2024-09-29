@@ -8,7 +8,7 @@ import { Single } from "./pages/single";
 import injectContext from "./store/appContext";
 
 import { Navbar } from "./component/navbar";
-import { Footer } from "./component/footer";
+// import { Footer } from "./component/footer";
 
 
 import { Category } from "./pages/categories";
@@ -19,7 +19,7 @@ import SignUp from "./component/signUp";
 import App from "./component/openAI";
 import HomeSearch from "./component/homeSearch";
 import HomeMapComponent from "./component/homeMap";
-import HomeSearchPage from "./component/homeSearchPage"; // Import your new search page
+import { HomeSearchPage } from "./component/homeSearchPage"; // Import your new search page
 
 // ------ My imports ------------
 
@@ -37,7 +37,7 @@ const Layout = () => {
                     <Routes>
                         <Route element={<Category />} path="/categories" />
                         <Route element={<CategoryFavorites />} path="/categories/:category" />
-                        <Route element={<SearchPage />} path="/" />
+                        <Route element={<HomeSearchPage />} path="/" />
                         <Route element={<HomeMapComponent />} path="/homeMap" />
                       
 
@@ -45,13 +45,13 @@ const Layout = () => {
                         <Route element={<SignIn />} path="/signIn" />
                         <Route element={<App />} path="/cityfinder" />
                         {/* <Route element={<HomeSearch />} path="/homesearch" /> */}
-                        <Route element={<SearchPage />} path="/searchPage" />
+                        {/* <Route element={<HomeSearchPage/>} path="/searchPage" /> */}
 
                         <Route element={<HomeSearchPage />} path="/homeSearchpage" />
                         <Route element={<Single />} path="/single/:theid" />
                         <Route element={<h1>Not found!</h1>} />
                     </Routes>
-                    <Footer />
+                    {/* <Footer /> */}
                 </ScrollToTop>
             </BrowserRouter>
         </div>

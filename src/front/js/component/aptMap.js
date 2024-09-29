@@ -28,34 +28,34 @@ export const AptMapComponent = () => {
   const mapRef = useRef(null); // Reference to the map instance
 
 
-  const fetchCategories = () => {
-    //const token = sessionStorage.getItem('token'); // Retrieve the JWT token from sessionStorage
+  // const fetchCategories = () => {
+  //   //const token = sessionStorage.getItem('token'); // Retrieve the JWT token from sessionStorage
 
-    return fetch(process.env.BACKEND_URL + "api/categories", {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-           // 'Authorization': `Bearer ${token}` // Include the JWT token in the Authorization header
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => {
-                throw new Error(data.error || 'Failed to fetch categories');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        setPropertyCategories(data);
-        console.log('Fetched categories:', data);
-        return data; // Return the fetched categories data
-    })
-    .catch(error => {
-        console.error('Error fetching categories:', error.message);
-        // Optionally, you can handle the error by displaying a message to the user
-    });
-  };
+  //   return fetch(process.env.BACKEND_URL + "api/categories", {
+  //       method: 'GET',
+  //       headers: {
+  //           'Content-Type': 'application/json'
+  //          // 'Authorization': `Bearer ${token}` // Include the JWT token in the Authorization header
+  //       }
+  //   })
+  //   .then(response => {
+  //       if (!response.ok) {
+  //           return response.json().then(data => {
+  //               throw new Error(data.error || 'Failed to fetch categories');
+  //           });
+  //       }
+  //       return response.json();
+  //   })
+  //   .then(data => {
+  //       setPropertyCategories(data);
+  //       console.log('Fetched categories:', data);
+  //       return data; // Return the fetched categories data
+  //   })
+  //   .catch(error => {
+  //       console.error('Error fetching categories:', error.message);
+  //       // Optionally, you can handle the error by displaying a message to the user
+  //   });
+  // };
 
 
 
@@ -113,15 +113,15 @@ export const AptMapComponent = () => {
     fetchApartments();
   }, [fetchApartments]);
 
-  useEffect(() => {
-    fetchCategories()
-      .then(data => {
-        if (data) {
-          setPropertyCategories(data);
-        }
-      })
-      .catch(err => setError(err.message));
-  }, []);
+  // useEffect(() => {
+  //   fetchCategories()
+  //     .then(data => {
+  //       if (data) {
+  //         setPropertyCategories(data);
+  //       }
+  //     })
+  //     .catch(err => setError(err.message));
+  // }, []);
 
   const handleSaveToCategory = (property, category) => {
     console.log(`Saving property to category: ${category}`);

@@ -1,7 +1,3 @@
-"""
-This module takes care of starting the API Server, Loading the DB and Adding the endpoints
-"""
-
 from flask import Flask, logging, request, current_app, jsonify, url_for, Blueprint
 from api.models import db, User, Categories, Listings
 from api.utils import generate_sitemap, APIException
@@ -11,11 +7,12 @@ import requests
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 from datetime import datetime, timedelta
 import hashlib
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from openai import OpenAI
 import json
 import logging
 import os
+import re
 
 client = OpenAI()
 
@@ -30,7 +27,6 @@ def handle_hello():
         "message": "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
     }
     return jsonify(response_body), 200
-
 
 @api.route('/homes', methods=['GET'])
 def get_homes():
@@ -54,7 +50,6 @@ def get_homes():
         url += '&hasFireplace=true'
     if near_school:
         url += '&nearbySchools=true'
-
 
 api_key= 'AIzaSyA78pBoItwl17q9g5pZPNUYmLuOnTDPVo8'
 def get_coordinates(address, api_key):
@@ -86,8 +81,6 @@ def geocode():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
 @api.route('/apartments', methods=['GET'])
 def get_apartments():
     location = request.args.get('location', 'San Francisco, CA')
@@ -116,9 +109,31 @@ def get_apartments():
     data = response.json()
     return jsonify(data), 200
 
+def parse_numeric_preference(value):
+    if not value:
+        return None, None
+    
+    value = str(value).lower()
+    numeric_match = re.search(r'\d+', value)
+    if numeric_match:
+        number = int(numeric_match.group())
+        if any(word in value for word in ['less', 'under', 'below', 'max']):
+            return number, 'less'
+        elif any(word in value for word in ['more', 'over', 'above', 'min']):
+            return number, 'more'
+        else:
+            return number, 'exact'
+    return None, None
+
+
+
 def process_zillow_data(data):
     processed_listings = []
-    props = data.get('props', [])
+    if isinstance(data, list):
+        props = data
+    else:
+        props = data.get('props', [])
+    
     print(f"Number of properties in raw data: {len(props)}")
     for listing in props:
         processed_listing = {
@@ -144,7 +159,7 @@ def process_zillow_data(data):
             'transitScore': listing.get('transitScore'),
             'bikeScore': listing.get('bikeScore'),
             'crime_rate': listing.get('crimeRate'),
-            'latitude': listing.get('latitude'),  # Add this line
+            'latitude': listing.get('latitude'),
             'longitude': listing.get('longitude'),
             'nearby_amenities': listing.get('nearbyAmenities', []),
         }
@@ -153,29 +168,116 @@ def process_zillow_data(data):
     return processed_listings
 
 
+def extract_location_details(location_string):
+    print(f"Extracting details from: {location_string}")
+    location_string = location_string.lower().strip()
+    details = {}
+    
+    # List of known cities (expand this list as needed)
+    known_cities = ['palm springs', 'san diego', 'los angeles', 'new york', 'chicago', 'houston', 'phoenix', 'philadelphia', 'san antonio', 'san francisco', 'seattle']
+    
+    # Extract city (prioritize known cities)
+    for city in known_cities:
+        if city in location_string:
+            details['city'] = city.title()
+            break
+    
+    if 'city' not in details:
+        # If no known city found, try to extract any capitalized words
+        city_match = re.search(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b', location_string.title())
+        if city_match:
+            details['city'] = city_match.group(1)
+    
+    print(f"Extracted city: {details.get('city', 'None')}")
+    
+    # Extract number of bedrooms
+    bedroom_patterns = [
+        r'(\d+)\s*(?:br\b|bed(?:room)?s?\b)',
+        r'(\d+)[-\s]bed(?:room)?s?\b'
+    ]
+    for pattern in bedroom_patterns:
+        bedroom_match = re.search(pattern, location_string)
+        if bedroom_match:
+            details['bedrooms'] = int(bedroom_match.group(1))
+            break
+    
+    # Extract number of bathrooms
+    bathroom_patterns = [
+        r'(\d+(?:\.\d+)?)\s*(?:ba\b|bath(?:room)?s?\b)',
+        r'(\d+(?:\.\d+)?)[-\s]bath(?:room)?s?\b'
+    ]
+    for pattern in bathroom_patterns:
+        bathroom_match = re.search(pattern, location_string)
+        if bathroom_match:
+            details['bathrooms'] = float(bathroom_match.group(1))
+            break
+    
+    # Extract price
+    price_patterns = [
+        r'\$?(\d+(?:\.\d+)?)\s*(?:k|thousand)',
+        r'\$?(\d+(?:\.\d+)?)\s*(?:m|million)',
+        r'\$?(\d+(?:,\d{3})*(?:\.\d+)?)'
+    ]
+    for pattern in price_patterns:
+        price_match = re.search(pattern, location_string)
+        if price_match:
+            price = float(price_match.group(1).replace(',', ''))
+            if 'k' in price_match.group() or 'thousand' in price_match.group():
+                price *= 1000
+            elif 'm' in price_match.group() or 'million' in price_match.group():
+                price *= 1000000
+            details['price'] = price
+            break
+    
+    print(f"Extracted details: {details}")
+    return details
+
 @api.route('/analyze_apartments', methods=['POST'])
 def analyze_apartments():
-    print("Received request to /analyze_apartments")
+    print("\n--- Starting analyze_apartments function ---")
     try:
         if not request.is_json:
             raise ValueError("Request data must be in JSON format")
 
         user_preferences = request.json.get('preferences', {})
-        print("Received preferences:", user_preferences)
+        print("Received preferences:", json.dumps(user_preferences, indent=2))
 
         current_app.logger.info("analyze_apartments endpoint was called")
         
         # Fetch apartment data
         base_url = "https://zillow-com1.p.rapidapi.com/propertyExtendedSearch"
         
-        location = user_preferences.get("location", "San Francisco, CA").split(" with ")[0].strip()
+        # Extract location details from location string
+        full_location = user_preferences.get("location", "San Francisco, CA")
+        location_details = extract_location_details(full_location)
+        location = location_details.get('city')
+        
+        # If no city was extracted, use the full location string
+        if not location:
+            location = full_location
+        
+        print(f"Extracted location for search: {location}")
+        
         sort = user_preferences.get("sort", "Newest")
-        min_price = user_preferences.get("min_price")
-        max_price = user_preferences.get("max_price")
-        min_sqft = user_preferences.get("min_sqft")
-        max_sqft = user_preferences.get("max_sqft")
-        bedrooms = user_preferences.get('bedrooms')
-        bathrooms = user_preferences.get('bathrooms')
+        
+        # Parse price input
+        min_price = location_details.get('price') or user_preferences.get('min_price')
+        max_price = user_preferences.get('max_price')
+        
+        # Parse square footage input
+        sqft_value, sqft_comparison = parse_numeric_preference(user_preferences.get('square_footage'))
+        
+        bedrooms = location_details.get('bedrooms') or user_preferences.get('bedrooms')
+        bathrooms = location_details.get('bathrooms') or user_preferences.get('bathrooms')
+        
+        print("\nParsed user preferences:")
+        print(f"  Location: {location}")
+        print(f"  Sort: {sort}")
+        print(f"  Min price: {min_price}")
+        print(f"  Max price: {max_price}")
+        print(f"  Square footage: {sqft_value} {sqft_comparison}")
+        print(f"  Bedrooms: {bedrooms}")
+        print(f"  Bathrooms: {bathrooms}")
         
         # Construct URL with parameters
         url = f"{base_url}?location={location}&sort={sort}"
@@ -183,33 +285,35 @@ def analyze_apartments():
             url += f'&price_min={min_price}'
         if max_price:
             url += f'&price_max={max_price}'
-        if min_sqft:
-            url += f'&sqft_min={min_sqft}'
-        if max_sqft:
-            url += f'&sqft_max={max_sqft}'
         if bedrooms:
             url += f'&beds_min={bedrooms}&beds_max={bedrooms}'
         if bathrooms:
             url += f'&baths_min={bathrooms}&baths_max={bathrooms}'
 
-        print(f"Constructed URL: {url}")  # Print the constructed URL
+        print(f"\nConstructed URL: {url}")
 
         headers = {
-            "X-RapidAPI-Key": os.getenv('REACT_APP_RAPIDAPI_KEY'),
-            "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com"
-        }
-
-        print("Sending request to Zillow API")
+    "X-RapidAPI-Key": "b795d0ddb7mshd6bc81c11ace173p1166a5jsn15beb32616c7",
+    "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com"
+}
+        print("\nSending request to Zillow API")
         response = requests.get(url, headers=headers)
         print(f"Zillow API response status: {response.status_code}")
-        print(f"Full Zillow API response: {json.dumps(response.json(), indent=2)}")  # Print the full response
-        response.raise_for_status()
+        
+        if response.status_code != 200:
+            print(f"Error response from Zillow API: {response.text}")
+            raise Exception(f"Zillow API returned status code {response.status_code}")
+        
         data = response.json()
         print("Received response from Zillow API")
-       
-        # Process apartment data
-        processed_data = process_zillow_data(data)
-        print(f"Processed {len(processed_data)} apartments")
+        if isinstance(data, list):
+            print(f"Number of properties in response: {len(data)}")
+            processed_data = process_zillow_data(data)
+        else:
+            print(f"Number of properties in response: {len(data.get('props', []))}")
+            processed_data = process_zillow_data(data)
+        
+        print(f"\nProcessed {len(processed_data)} apartments")
         
         if not processed_data:
             print("No properties found after processing")
@@ -219,15 +323,58 @@ def analyze_apartments():
             }), 200
 
         # Filter processed data based on user preferences
-        filtered_data = [prop for prop in processed_data if (
-            (not min_price or prop['price'] >= int(min_price)) and
-            (not max_price or prop['price'] <= int(max_price)) and
-            (not min_sqft or prop['living_area'] >= int(min_sqft)) and
-            (not max_sqft or prop['living_area'] <= int(max_sqft)) and
-            (not bedrooms or prop['bedrooms'] == int(bedrooms)) and
-            (not bathrooms or prop['bathrooms'] == float(bathrooms))
-        )]
-        print(f"Filtered {len(filtered_data)} properties matching user preferences")
+        print(f"\nFiltering with user preferences")
+        filtered_data = []
+        for index, prop in enumerate(processed_data):
+            price = prop.get('price')
+            living_area = prop.get('living_area')
+            bedrooms_count = prop.get('bedrooms')
+            bathrooms_count = prop.get('bathrooms')
+
+            print(f"\nEvaluating property {index + 1}:")
+            print(f"  Price: {price}, Living Area: {living_area}, Bedrooms: {bedrooms_count}, Bathrooms: {bathrooms_count}")
+
+            # Apply conditions
+            conditions = []
+
+            if min_price is not None and price is not None:
+                condition = price >= int(min_price)
+                conditions.append(condition)
+                print(f"  Min price condition: {condition}")
+
+            if max_price is not None and price is not None:
+                condition = price <= int(max_price)
+                conditions.append(condition)
+                print(f"  Max price condition: {condition}")
+
+            if sqft_value is not None and living_area is not None:
+                if sqft_comparison == 'more':
+                    condition = living_area >= sqft_value
+                elif sqft_comparison == 'less':
+                    condition = living_area <= sqft_value
+                elif sqft_comparison == 'exact':
+                    condition = living_area == sqft_value
+                conditions.append(condition)
+                print(f"  Square footage condition: {condition}")
+
+            if bedrooms is not None and bedrooms_count is not None:
+                condition = bedrooms_count == int(bedrooms)
+                conditions.append(condition)
+                print(f"  Bedrooms condition: {condition}")
+            if bathrooms is not None and bathrooms_count is not None:
+                condition = bathrooms_count == float(bathrooms)
+                conditions.append(condition)
+                print(f"  Bathrooms condition: {condition}")
+
+            if not conditions or all(conditions):
+                filtered_data.append(prop)
+                print("  Property matched all conditions or no conditions were specified")
+            else:
+                print("  Property filtered out")
+
+            print(f"  Applied conditions: {conditions}")
+
+        print(f"\nFiltered {len(filtered_data)} properties matching user preferences")
 
         if not filtered_data:
             print("No properties found after filtering")
@@ -236,27 +383,31 @@ def analyze_apartments():
                 "analysis": "No properties found matching your criteria. Please try adjusting your search parameters."
             }), 200
 
-        print(f"Filtered data sample: {json.dumps(filtered_data[:2], indent=2)}")
+        print(f"\nFiltered data sample: {json.dumps(filtered_data[:2], indent=2)}")
         
         # Analyze with OpenAI
+        price_preference = f"Price range: {min_price if min_price else 'Not specified'} to {max_price if max_price else 'Not specified'}"
+        sqft_preference = f"Square footage: {sqft_comparison} than {sqft_value}" if sqft_value else "Square footage: Not specified"
         openai_prompt = f"""
-        Analyze these properties based on the following user preferences: {user_preferences}
+        Analyze the following user input to extract relevant home search criteria:
+        "{user_preferences.get('location', '')}"
 
-        Pay special attention to features that are attractive to homeowners, such as:
-        1. Home price (range: {min_price if min_price else 'Not specified'} to {max_price if max_price else 'Not specified'})
-        2. Square footage (range: {min_sqft if min_sqft else 'Not specified'} to {max_sqft if max_sqft else 'Not specified'})
-        3. Number of bedrooms (preferred: {bedrooms if bedrooms else 'Not specified'})
-        4. Number of bathrooms (preferred: {bathrooms if bathrooms else 'Not specified'})
-        5. Location
+        Please extract and provide the following information:
+        1. City name
+        2. Number of bedrooms (if specified)
+        3. Number of bathrooms (if specified)
+        4. Price range (if specified)
+        5. Any other relevant criteria mentioned (e.g., square footage, amenities)
 
-        For each property, highlight the features that best match the user's preferences and those that could be particularly attractive to homeowners.
-
+        Then, analyze these properties based on the extracted preferences:
         Property data: {json.dumps(filtered_data)}
 
         Please provide a detailed analysis of the top 3-5 properties that best match the user's preferences, 
         including mentions of the special features listed above where applicable.
+
+        Begin your response with a summary of the extracted search criteria, then proceed with the property analysis.
         """
-        print("Sending request to OpenAI")
+        print("\nSending request to OpenAI")
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -275,27 +426,66 @@ def analyze_apartments():
             "analysis": analysis
         }
         
-        print("Sending response back to client")
+        print("\nSending response back to client")
         return jsonify(result), 200
     except Exception as e:
-        print(f"Error in analyze_apartments: {str(e)}")
+        print(f"\nError in analyze_apartments: {str(e)}")
         print(f"Error type: {type(e).__name__}")
         print(f"Error args: {e.args}")
         current_app.logger.error(f"Error in analyze_apartments: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+    finally:
+        print("--- Ending analyze_apartments function ---\n")
+
+def extract_city(text):
+    # Simple regex to match city names (assuming they start with a capital letter)
+    match = re.search(r'\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b', text)
+    return match.group(1) if match else None
+
+
+@api.route('/signup', methods=['POST'])
+def signup():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({"message": "Email and password are required"}), 400
+
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({"message": "Email already registered"}), 400
+
+    new_user = User(email=email, is_active=True)
+    new_user.set_password(password)
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({"message": "User created successfully"}), 201
+
 
 @api.route('/signin', methods=['POST'])
-def create_signin():
-    email = request.json.get('email', None)
-    password = request.json.get('password', None)
-    if email is not None and password is not None:
-        hashed_password = hashlib.sha256(password.encode()).hexdigest()
-        user = User.query.filter_by(email = email, password = hashed_password).first()
-        if not user: 
-            return jsonify(error = "Invalid credentials"), 404
-        access_token = create_access_token(identity = user.id)
-        return jsonify(access_token = access_token)
-    return jsonify(error = "Missing email or password"), 400
+def signin():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({"message": "Email and password are required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if user is None or not check_password_hash(user.password, password):
+        return jsonify({"message": "Invalid email or password"}), 401
+
+    # Create the access token
+    access_token = create_access_token(identity=user.id)
+
+    return jsonify({
+        "message": "Logged in successfully",
+        "access_token": access_token,
+        "user_id": user.id
+    }), 200
 
 @api.route('/user', methods=['GET'])
 @jwt_required()
@@ -306,20 +496,17 @@ def get_user():
         raise APIException('user not found', status_code = 404)
     return jsonify(user.serialize()), 200
 
-@api.route('/signup', methods = ['POST'])
+@api.route('/signup', methods=['POST'])
 def create_user():
-    body = request.get_json()
-    if "email" not in body:
-        return jsonify({'error': 'You need to specify the email'}), 400
-    if "password" not in body:
-        return jsonify({'error': 'You need to specify the password'}), 400
-    email = body['email']
-    password = body['password']
-    hashed_password = hashlib.sha256(password.encode()).hexdigest()
-    new_user = User(email = email, password = hashed_password, is_active=True)
+    email = request.json.get('email').strip()
+    password = request.json.get('password').strip()
+    
+    hashed_password = generate_password_hash(password)
+    new_user = User(email=email, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': 'Signup successful'}), 200
+    
+    return jsonify({"msg": "User created successfully"}), 201
 
 
 @api.route('/chatgpt/ask', methods = ["POST"])
@@ -348,16 +535,20 @@ def generate_city_list():
     )
     return jsonify(result = json.loads(completion.choices[0].message.content))
 
-# @api.route('/private', methods=['GET'])
-# @jwt_required()
-# def handle_private():
-#     current_user_id = get_jwt_identity()
-#     user = User.query.get(current_user_id)
-    
-#     if user is None:
-#         return jsonify({"msg": "Please signin"})
-#     else :
-#         return jsonify({"user_id": user.id, "email": user.email}), 200
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #----------------------------------------JP---------------------------------------

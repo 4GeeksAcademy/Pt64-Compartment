@@ -6,11 +6,11 @@ export const NonLoggedInNavbar = () => {
     <nav className="navbar navbar-light custom-navbar">
       <div className="container">
         <Link to="/" className="navbar-brand-link">
-          <img 
+          {/* <img 
             src="/homeai.jpg"
-            alt="Compartments.com" 
+            alt="Nestify.ai" 
             className="navbar-brand-image" 
-          />
+          /> */}
         </Link>
         <div className="ml-auto">
           <Link to="/signin">
